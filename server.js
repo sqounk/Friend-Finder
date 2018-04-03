@@ -1,28 +1,36 @@
-// Dependencies
-// =============================================================
-var express = require('express');
 var bodyParser = require('body-parser');
+var express = require('express');
+var methodOverride = require('method-override');
+var mongoose = require('mongoose');
+mongoose.Promise = Promise;
 
-// Sets up the Express App
-// =============================================================
 var app = express();
-var PORT = process.env.PORT || 3000;
+var port = process.env.PORT || 3000;
 
-// Sets up the Express app to handle data parsing
+// Serve static content for the app from the 'public' directory in the
+// application directory.
+app.use(express.static(__dirname + '/public'));
+
+// // Override with POST having ?_method=DELETE
+app.use(methodOverride('_method'));
+
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.text());
-app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
+// Parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
 
-// Starts the server to begin listening
-// =============================================================
-app.listen(PORT, function() {
-  console.log('App listening on PORT ' + PORT);
+mongoose.connect('mongodb://heroku_rlw4lz7w:hvl0tepohsfs3r7s82839l3ls' +
+                 '@ds113670.mlab.com:13670/heroku_rlw4lz7w');
+var db = mongoose.connection;
+
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+    console.log('Connected');
+    app.listen(port, function() {
+        console.log('listening on ' + port);
+    });
 });
 
-// Routes
-// =============================================================
-// html routes
-require('./app/routing/htmlRoutes.js')(app);
-// api routes
-require('./app/routing/apiRoutes.js')(app);
+// get them routes
+require('./controllers/nytreact_controller.js')(app);
